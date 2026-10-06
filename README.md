@@ -152,3 +152,7 @@ python scripts/e2e_reflex.py    OUT_DIR             # through the app's sidebar 
 ## Acknowledgements
 
 bioGeometry combines the geometry engine of **compGeoD3** with the residue-tetrahedra and hull-triangle features of **protein-geometry-dashboard**. The bounding-box Voronoi follows **py_della**. Data come from the RCSB PDB, the AlphaFold Protein Structure Database, PDBe (Pfam / CATH mappings) and UniProt.
+
+## License
+
+bioGeometry is released under the [MIT License](LICENSE). The bundled third-party code in `assets/workbench/vendor/` keeps its own licences: three.js r170 and its add-ons (MIT) and D3 v7 (ISC). See [THIRD-PARTY-LICENSES.md](assets/workbench/vendor/THIRD-PARTY-LICENSES.md). Runtime dependencies installed with pip (Reflex, gemmi, numpy, scipy, Starlette, uvicorn) are under their own licences.

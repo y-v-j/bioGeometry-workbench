@@ -119,6 +119,7 @@ docs/                 USER_GUIDE.md; screenshots/ (guide, seaborn-palette)
 | 3.17 | Feedback 14 | *Backbone* instead of *Cα* |
 | 3.18 | Feedback 15 | folder rename, README, user guide, screenshots, nucleic-acid note, these notes |
 | 3.19 | Feedback 16 | `docs/reference/` removed |
+| 3.20 | Feedback 17 | published on GitHub; MIT licence |
 
 ### 3.1 First build
 
@@ -341,6 +342,13 @@ That threshold gives 43–48% surface, 27–37% just under the surface and 20–
 | Request | What was done |
 |---|---|
 | `docs/reference/` and its files are not needed: remove them | Deleted the folder (1.7 MB): `seq-viewer.jpeg`, `seq-viewer-instructions.md`, `bio_dashboard_image_sample.png` and `bio_dashboard_image_sample_02.png`, the design references from 1.3. The mentions in the README's project layout and in these notes (1.3, the code layout, 3.5) were updated. Nothing else used the folder. |
+
+### 3.20 Seventeenth round of user feedback: GitHub and licence
+
+| Request | What was done |
+|---|---|
+| Commit to GitHub as a public repository `bioGeometry-workbench` (user `y-v-j`) | `git init` on `main`; the existing `.gitignore` keeps out `data/`, `.web/`, `.states/`, `reflex.lock`, `uploaded_files/` and Python caches, leaving 72 files. Before publishing, a scan found no tokens, keys, passwords or email addresses. These notes do contain local paths, which the user was told about. The commit author is the user's GitHub no-reply address (set for this repository only), so no personal email is published. `gh repo create --public --push` created https://github.com/y-v-j/bioGeometry-workbench. |
+| Add an appropriate licence | **MIT** (`LICENSE`, © 2026 Yogesh (y-v-j)). It is permissive like the dependencies (Reflex Apache-2.0, gemmi MPL-2.0, numpy / scipy / Starlette / uvicorn BSD) and compatible with the bundled code. The bundled three.js r170 with its add-ons (MIT) and D3 v7.9.0 (ISC) require their notices to travel with copies, so their full texts are in `assets/workbench/vendor/THIRD-PARTY-LICENSES.md`. The README gained a License section. |
 
 ---
 
