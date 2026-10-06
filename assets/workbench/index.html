@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>bioGeometry workbench</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"%3E%3Cpolygon points="12,2.5 3,17 14.5,21.5" fill="%237dd3fc" fill-opacity=".2"/%3E%3Cpolygon points="12,2.5 14.5,21.5 21,14.5" fill="%23f9a8d4" fill-opacity=".2"/%3E%3Cline x1="3" y1="17" x2="21" y2="14.5" stroke="%239a9ab8" stroke-width="1" stroke-dasharray="1.6 1.4"/%3E%3Cpath d="M12 2.5 L3 17 L14.5 21.5 L21 14.5 Z M12 2.5 L14.5 21.5" fill="none" stroke="%23c4b5fd" stroke-width="1.5" stroke-linejoin="round"/%3E%3Ccircle cx="12" cy="2.5" r="1.9" fill="%23f9a8d4"/%3E%3Ccircle cx="3" cy="17" r="1.9" fill="%237dd3fc"/%3E%3Ccircle cx="14.5" cy="21.5" r="1.9" fill="%23c4b5fd"/%3E%3Ccircle cx="21" cy="14.5" r="1.9" fill="%23fde68a"/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./theme.css">
+  <script src="./vendor/d3.v7.min.js"></script>
+  <script type="importmap">
+    {"imports": {"three": "./vendor/three.module.min.js",
+                 "three/addons/controls/TrackballControls.js": "./vendor/TrackballControls.js",
+                 "three/addons/lines/LineSegments2.js": "./vendor/lines/LineSegments2.js",
+                 "three/addons/lines/LineSegmentsGeometry.js": "./vendor/lines/LineSegmentsGeometry.js",
+                 "three/addons/lines/LineMaterial.js": "./vendor/lines/LineMaterial.js"}}
+  </script>
+</head>
+<body>
+<div id="wb">
+  <!-- ─────────────── sequence viewer ─────────────── -->
+  <section id="p-seq" class="panel">
+    <header class="ph"><span class="pt"><i class="notch sky"></i>SEQUENCE</span>
+      <span class="pinfo" id="seq-info"></span>
+      <span class="ptools">
+        <label class="mini">colour <select id="seq-color">
+          <option value="class">class</option><option value="ss">secondary structure</option>
+          <option value="conf">B-factor / pLDDT</option><option value="hydropathy">hydropathy</option>
+          <option value="rsa">burial (RSA)</option></select></label>
+        <button id="seq-multi" class="chip tog" title="Multi-select (M): clicks, drags and brushes in every view add residues to the selection, and a second click removes one. Without it: ctrl-click toggles, shift-click adds a range.">＋ multi</button>
+        <button id="seq-measure" class="chip accent" title="Measure the geometry of the selection: domains, ligands, ions… (G)">⌬ measure</button>
+        <button id="seq-clear" class="chip" title="Clear the selection, its measurement and highlights (Esc)">clear ⌫</button>
+      </span>
+    </header>
+    <div class="seq-body">
+      <div id="seq-chains-host"><div id="seq-chains" title="Chains - click to select a chain, shift-click to add"></div></div>
+      <div id="seq-main"><div id="seq-scroll"><div id="seq-spacer"></div></div><canvas id="seq-canvas"></canvas></div>
+      <div id="seq-het-host"><div id="seq-het" title="Domains, ligands, ions and coordinated waters - tick to add to the selection"></div></div>
+    </div>
+  </section>
+
+  <!-- ─────────────── structure viewer ─────────────── -->
+  <section id="p-mol" class="panel view">
+    <header class="ph"><span class="pt"><i class="notch lavender"></i>STRUCTURE</span>
+      <span class="pinfo" id="mol-info"></span>
+      <span class="ptools">
+        <select id="mol-style" title="Representation">
+          <option value="cartoon">cartoon</option><option value="trace">trace</option>
+          <option value="spheres">spheres</option><option value="sticks">sticks</option></select>
+        <select id="mol-color" title="Colour scheme">
+          <option value="chain">chain</option><option value="ss">secondary structure</option>
+          <option value="class">residue class</option><option value="conf">B-factor / pLDDT</option>
+          <option value="hydropathy">hydropathy</option><option value="rainbow">N → C</option>
+          <option value="element">element</option><option value="rsa">burial (RSA)</option>
+          <option value="vor_volume">Voronoi volume</option><option value="hull_depth">hull depth</option>
+          <option value="del_degree">Delaunay contacts</option></select>
+        <select id="sel-color" title="Selection colour (every view)">
+          <option value="cyan">◉ cyan</option><option value="magenta">◉ magenta</option><option value="violet">◉ violet</option>
+          <option value="lime">◉ lime</option><option value="white">◉ white</option></select>
+        <button class="chip tog" data-tog="dim" title="Fade what is not selected (both 3D views, sequence, Ramachandran)">dim</button>
+        <button class="chip tog on" data-tog="link" title="Link: rotate / zoom / pan both 3D views together (L)">⇄</button>
+        <button class="chip tog on" data-tog="bind" title="Dotted lines from ligands, ions and waters to what binds them: metal coordination (violet), hydrogen bonds (pink), water bridges (blue), covalent links (grey)">⋯</button>
+        <button class="chip" data-act="reset" title="Reset view (R)">⟲</button>
+        <button class="chip tog" data-tog="spin" title="Spin (S)">↻</button>
+        <button class="chip tog" data-tog="slab" title="Slab clipping (C)">▤</button>
+        <button class="chip" data-act="shot" title="Save PNG">⤓</button>
+      </span>
+    </header>
+    <div class="vbody" id="mol-host"><div class="legend" id="mol-legend"></div><div class="vtip" id="mol-tip" hidden></div></div>
+  </section>
+
+  <!-- ─────────────── computational geometry viewer ─────────────── -->
+  <section id="p-geo" class="panel view">
+    <header class="ph"><span class="pt" title="computational geometry of the point set"><i class="notch mint"></i>GEOMETRY</span>
+      <span class="ptools" id="geo-toggles">
+        <button class="chip layer" data-layer="hull" title="Convex hull">hull</button>
+        <button class="chip layer on" data-layer="delaunay" title="Delaunay tessellation">Delaunay</button>
+        <button class="chip layer" data-layer="alpha" title="α-shape">α-shape</button>
+        <button class="chip layer" data-layer="voronoi" title="Voronoi diagram">Voronoi</button>
+        <span class="sep"></span>
+        <button class="chip" id="geo-show" title="What to draw: points, cartoon, selection simplices, selection geometry">show ▾</button>
+        <button class="chip" data-act="reset" title="Reset view">⟲</button>
+        <button class="chip" data-act="shot" title="Save PNG">⤓</button>
+      </span>
+    </header>
+    <div class="vbody" id="geo-host"><div class="legend" id="geo-legend"></div><div class="vstats" id="geo-stats"></div>
+      <div class="vtip" id="geo-tip" hidden></div></div>
+  </section>
+
+  <!-- ─────────────── Ramachandran / contact map / PAE ─────────────── -->
+  <section id="p-rama" class="panel">
+    <header class="ph"><span class="pt"><i class="notch rose"></i><span id="rama-title">RAMACHANDRAN</span></span>
+      <span class="ptools tabs" id="rama-tabs">
+        <button class="chip on" data-tab="rama">Φ/Ψ</button>
+        <button class="chip" data-tab="cmap">contacts</button>
+        <button class="chip" data-tab="pae" id="tab-pae" hidden>PAE</button>
+        <select id="rama-color" title="Colour by"><option value="ss">SS</option><option value="class">class</option>
+          <option value="region">region</option><option value="conf">B / pLDDT</option></select>
+      </span>
+    </header>
+    <div class="vbody" id="rama-host"><canvas id="rama-canvas"></canvas><svg id="rama-svg"></svg>
+      <div class="vtip" id="rama-tip" hidden></div></div>
+  </section>
+
+  <!-- ─────────────── data table + analytics dock ─────────────── -->
+  <section id="p-table" class="panel">
+    <div id="dock-resize" title="Drag to resize"></div>
+    <header class="ph"><span class="pt"><i class="notch teal"></i>DATA</span>
+      <span class="tabs" id="dock-tabs"></span>
+      <span class="ptools" id="table-tools">
+        <span class="pinfo" id="table-info"></span>
+        <button class="chip tog" data-tog="selonly" title="Show only rows involving the current selection">⟐ sel. only</button>
+        <button class="chip" data-act="selfiltered" title="Make the filtered rows the selection">select ↗</button>
+        <button class="chip" data-act="clearfilters" title="Clear every column filter">✕ filters</button>
+        <button class="chip" data-act="columns" title="Choose columns">cols ▾</button>
+        <button class="chip" data-act="exportview" title="Download the rows as shown (CSV)">⤓ view</button>
+        <select id="csv-download" title="Downloads: the structure file (mmCIF / PDB) and the feature tables (CSV)"><option value="">⤓ files…</option></select>
+      </span>
+    </header>
+    <div id="dock-body"></div>
+  </section>
+
+  <!-- ─────────────── status bar ─────────────── -->
+  <footer id="status">
+    <span class="st"><i class="dot" id="st-dot"></i><b id="st-state">IDLE</b></span>
+    <span class="st" id="st-struct">no structure</span>
+    <span class="st" id="st-sel">selection: none</span>
+    <span class="st" id="st-layer"></span>
+    <span class="grow"></span>
+    <span class="st mono" id="st-fps"></span>
+    <svg id="st-spark" width="90" height="14"></svg>
+  </footer>
+</div>
+
+<div id="empty"><div class="empty-card">
+  <svg class="logo" width="54" height="54" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><polygon points="12,2.5 3,17 14.5,21.5" fill="#7dd3fc" fill-opacity=".2"/><polygon points="12,2.5 14.5,21.5 21,14.5" fill="#f9a8d4" fill-opacity=".2"/><line x1="3" y1="17" x2="21" y2="14.5" stroke="#9a9ab8" stroke-width="1" stroke-dasharray="1.6 1.4"/><path d="M12 2.5 L3 17 L14.5 21.5 L21 14.5 Z M12 2.5 L14.5 21.5" fill="none" stroke="#c4b5fd" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="2.5" r="1.9" fill="#f9a8d4"/><circle cx="3" cy="17" r="1.9" fill="#7dd3fc"/><circle cx="14.5" cy="21.5" r="1.9" fill="#c4b5fd"/><circle cx="21" cy="14.5" r="1.9" fill="#5eead4"/></svg>
+  <div class="brand">bio<b>Geometry</b></div>
+  <p>Interactive computational geometry of biological macromolecules.</p>
+  <p class="dim">Load a PDB entry or an AlphaFold model from the panel on the left.</p>
+</div></div>
+<div id="busy" hidden><div class="spinner"></div><span id="busy-msg">Loading…</span></div>
+<div id="toast" hidden></div>
+<div id="menu" class="menu" hidden></div>
+<script type="module" src="./js/main.js"></script>
+</body>
+</html>

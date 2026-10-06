@@ -1,0 +1,10 @@
+reflex>=0.9.5
+gemmi>=0.7
+numpy>=2.0
+scipy>=1.13
+starlette
+uvicorn
+# tests
+pytest
+biopython
+# headless end-to-end checks (scripts/e2e_*.py): pip install playwright && playwright install chromium firefox

@@ -1,0 +1,15 @@
+# Reflex build / runtime
+.web/
+.states/
+reflex.lock
+uploaded_files/
+*.db
+assets/external/
+
+# downloads, caches, layer buffers
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
