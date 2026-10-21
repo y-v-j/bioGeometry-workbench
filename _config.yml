@@ -1,0 +1,20 @@
+# GitHub Pages: README.md rendered with the Midnight Ink theme (_layouts/default.html).
+lang: en
+author: Yogesh
+tagline: "Computational geometry for biomolecules"
+nav:
+  - title: "Install"
+    url: "#installation"
+  - title: "Usage"
+    url: "#basic-usage"
+  - title: "Algorithms"
+    url: "#algorithms"
+license_name: "MIT"
+copyright: "© 2026 Yogesh (y-v-j)"
+defaults:
+  - scope:
+      path: ""
+    values:
+      image: /docs/screenshots/guide/02-app-overview-4hhb.png
+plugins:
+  - jekyll-seo-tag
