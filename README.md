@@ -34,7 +34,8 @@ bioGeometry loads a protein, nucleic-acid or complex structure from the **PDB**,
   - class, charge and hydropathy
   - H-bonds, salt bridges, interfaces, ligand sites and domains
 - **Tetrahedra table:** every compact Delaunay tetrahedron, with:
-  - edge lengths, face areas, volume and solid angles
+  - het ids of the ligands, ions and waters among its vertices (e.g. `ZN`, `NA-HEM-HOH`)
+  - edge lengths, face areas, volume, solid angles and circumsphere volume
   - Voronoi volume, SASA and depth (S / U / B) of each vertex
   - tetrahedrality, Tropsha class, α-shape membership, EC class and interaction type
 - **Selection measurement:** for any selection, split into groups (domains, chains, ligands, ions, waters):

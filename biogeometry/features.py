@@ -484,6 +484,11 @@ def tetra_rows(job, max_edge: float | None = None) -> dict:
     chains = np.asarray(s.chains, dtype=object)
     sep = "" if all(len(c) == 1 for c in s.chains) else "/"
     pchains = np.array([sep.join(row) for row in chains[ch4]], dtype=object)
+    # het ids: the distinct non-polymer residue names among the vertices, in vertex order (HEM, NA-MG, NA-HEM-HOH)
+    het = np.isin(s.res_kind, (KIND_LIGAND, KIND_ION, KIND_WATER))
+    hetid = np.full(len(r), "", dtype=object)
+    for i in np.flatnonzero(het[r].any(axis=1)):
+        hetid[i] = "-".join(dict.fromkeys(vnames[x] for x in r[i] if het[x]))
     ec_of = chain_ec(s)
     ec_chain = np.array([ec_of.get(c, "") for c in s.chains], dtype=object)
     ec = np.array([";".join(dict.fromkeys(x for x in ec_chain[row] if x)) for row in ch4], dtype=object)
@@ -501,7 +506,7 @@ def tetra_rows(job, max_edge: float | None = None) -> dict:
                    "atom-set": "c-alpha" if coarse else "all-atom", "alpha-value": alpha,
                    "alpha-shape-volume": ash.volume, "alpha-shape-surface-area": ash.area,
                    "hull-volume": hull.volume, "hull-surface-area": hull.area},
-        "ec": ec, "ec_cat": ec_cat, "rclass": rclass, "rtype": rtype, "pchains": pchains,
+        "ec": ec, "ec_cat": ec_cat, "rclass": rclass, "rtype": rtype, "pchains": pchains, "hetid": hetid,
         "L": L, "m": m, "circ": circ, "tetrahedrality": tetrahedrality(L), "tropsha": tropsha, "stype": stype,
         "vor_vol": vor.volume[tets], "vor_area": vor.area[tets], "sasa": pt_sasa[tets],
         "depth_cls": depth_cls[r], "depth": depth, "b": res_b[r],
@@ -525,6 +530,8 @@ def tetra_table(job, max_edge: float | None = None) -> tuple[Table, dict]:
     t.cat("residue-class", T["rclass"], "residue-class", "identity", "prt / dna / rna / lig / ion / hoh for each vertex")
     t.cat("residue-type", T["rtype"], "residue-type", "identity", "residue names of the four vertices (waters as HOH)")
     t.cat("participating-chains", T["pchains"], "participating-chains", "identity", "chain of each vertex")
+    t.cat("het-id", T["hetid"], "het-id", "identity",
+          "names of the ligands, ions and waters among the vertices, each once, e.g. MG, NA-MG, NA-HEM-HOH; blank if none")
     for i in range(6):
         t.num(f"edge-len-{i + 1}", T["L"][:, i], f"edge-len-{i + 1}", "edges", "Å", "edge length " + ["ab", "ac", "ad", "bc", "bd", "cd"][i])
     t.num("sum-edge-len", T["m"]["SumL"], "sum-edge-len", "edges", "Å", "sum of the six edge lengths")
@@ -554,6 +561,8 @@ def tetra_table(job, max_edge: float | None = None) -> tuple[Table, dict]:
           "the four residue depths in vertex order, e.g. SSUU (S surface, U just under the surface, B buried)")
     t.num("circumradius", np.minimum(T["circ"], 1e4), "circumradius", "shape", "Å",
           "radius of the sphere through the four vertices (the α at which the tetrahedron enters the α-shape)")
+    t.num("circumsphere-volume", 4.0 / 3.0 * np.pi * np.minimum(T["circ"], 1e4) ** 3, "circumsphere-volume", "shape", "Å³",
+          "volume of the sphere through the four vertices, 4/3 π r³ with r the circumradius")
     t.num("tetrahedrality", T["tetrahedrality"], "tetrahedrality", "shape", "",
           "Σ(lᵢ − lⱼ)² / 15 l̄² over the six edges: 0 for a regular tetrahedron, larger when distorted", fmt=".3f")
     t.cat("tropsha-class", T["tropsha"], "tropsha-class", "shape",

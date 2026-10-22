@@ -160,8 +160,8 @@ Nucleotides have no φ/ψ, so a DNA- or RNA-only structure has an empty φ/ψ pl
   | annotation | domains |
 
 - **Tetrahedra:** one row per compact Delaunay tetrahedron (shown with 1CA2 in section 4):
-  - its residues and residue classes
-  - edge lengths, face areas, volume, solid angles and circumradius
+  - its residues and residue classes, and the het ids of its ligands, ions and waters (`het-id`, e.g. `ZN`, `NA-MG`, `NA-HEM-HOH`)
+  - edge lengths, face areas, volume, solid angles, circumradius and circumsphere volume (4/3 π r³)
   - the Voronoi volume, SASA and depth (S / U / B) of each vertex, joined as `depth` (e.g. `SSUU`)
   - tetrahedrality, Tropsha class, α-shape membership, EC number and class, and interaction type
 

@@ -270,11 +270,11 @@ def test_residue_table_columns_and_values(hhb_job):
 
 REFERENCE_COLUMNS = (
     "pdbid-chainid model ec-number ec-category atom-set simplex-indices residues residue-class residue-type "
-    "participating-chains edge-len-1 edge-len-2 edge-len-3 edge-len-4 edge-len-5 edge-len-6 sum-edge-len avg-edge-len "
+    "participating-chains het-id edge-len-1 edge-len-2 edge-len-3 edge-len-4 edge-len-5 edge-len-6 sum-edge-len avg-edge-len "
     "triangle-1-area triangle-2-area triangle-3-area triangle-4-area surface-area-tetrahedron tetrahedron-volume "
     "omega-1 omega-2 omega-3 omega-4 voronoi-volume-1 voronoi-volume-2 voronoi-volume-3 voronoi-volume-4 "
     "voronoi-area-1 voronoi-area-2 voronoi-area-3 voronoi-area-4 sasa-1 sasa-2 sasa-3 sasa-4 residue-1-depth "
-    "residue-2-depth residue-3-depth residue-4-depth depth circumradius tetrahedrality tropsha-class simplex-type "
+    "residue-2-depth residue-3-depth residue-4-depth depth circumradius circumsphere-volume tetrahedrality tropsha-class simplex-type "
     "alpha-value alpha-shape alpha-shape-volume alpha-shape-surface-area hull-volume hull-surface-area "
     "bfactor-residue-1 bfactor-residue-2 bfactor-residue-3 bfactor-residue-4 sum-bfactor avg-bfactor interaction-type").split()
 
@@ -349,6 +349,13 @@ def test_zinc_site_tetrahedra():
     zn = [i for i in range(t.n) if "ZN" in cat("residue-type", i).split("-")]
     assert zn and all("ion" in cat("residue-class", i) and cat("interaction-type", i).startswith("protein-ion") for i in zn)
     assert any("HOH" in cat("residue-type", i) and cat("interaction-type", i) == "protein-ion-water" for i in zn)
+    # het-id: each non-polymer name once, in vertex order; blank for polymer-only tetrahedra
+    for i in range(t.n):
+        pairs = zip(cat("residue-type", i).split("-"), cat("residue-class", i).split("-"))
+        assert cat("het-id", i) == "-".join(dict.fromkeys(n for n, c in pairs if c in ("lig", "ion", "hoh")))
+    assert {cat("het-id", i) for i in zn} >= {"ZN", "ZN-HOH"}
+    r = np.minimum(t.data["circumradius"].astype(float), 1e4)
+    assert np.allclose(t.data["circumsphere-volume"], 4 / 3 * np.pi * r ** 3, rtol=1e-5)
 
 
 def test_vertex_classes_use_the_reference_name_sets():
